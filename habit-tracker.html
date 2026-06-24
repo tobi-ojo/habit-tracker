@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Own Your Day">
+<title>Own Your Day</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);
+  --text:#f0f0f5;--muted:rgba(240,240,245,0.4);--accent:#7c6aff;--accent2:#a855f7;
+  --green:#22c55e;--orange:#f97316;--red:#ef4444;--blue:#3b82f6;--gold:#eab308;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:100px;}
+
+/* HEADER */
+.header{padding:56px 20px 16px;background:linear-gradient(180deg,rgba(124,106,255,0.08) 0%,transparent 100%);}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.date-display h1{font-size:26px;font-weight:700;letter-spacing:-0.5px;}
+.date-display p{font-size:12px;color:var(--muted);margin-top:2px;}
+.mode-btn{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:6px 14px;color:var(--text);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;}
+
+/* PROGRESS RING */
+.progress-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:16px 20px;margin-bottom:8px;display:flex;align-items:center;gap:16px;}
+.ring-wrap{position:relative;width:64px;height:64px;flex-shrink:0;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--bg3);stroke-width:5;}
+.ring-fill{fill:none;stroke:url(#grad);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1);}
+.ring-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:700;color:var(--accent);}
+.prog-info h3{font-size:15px;font-weight:600;margin-bottom:3px;}
+.prog-info p{font-size:11px;color:var(--muted);line-height:1.5;}
+
+/* STREAK */
+.streak{display:flex;gap:5px;margin-bottom:20px;}
+.s-day{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 3px;text-align:center;}
+.s-day .sl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
+.s-day .sd{width:7px;height:7px;border-radius:50%;background:var(--bg3);margin:0 auto;}
+.s-day.done .sd{background:var(--green);box-shadow:0 0 5px rgba(34,197,94,0.4);}
+.s-day.today{border-color:rgba(124,106,255,0.4);}
+.s-day.today .sl{color:var(--accent);}
+
+/* SECTION LABEL */
+.sec-label{font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);padding:0 20px;margin:18px 0 8px;}
+
+/* TIME BLOCK */
+.t-block{margin:0 16px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color 0.3s;}
+.t-block.done{border-color:rgba(34,197,94,0.25);}
+.t-block.active-now{border-color:rgba(124,106,255,0.4);}
+.t-block-hdr{display:flex;align-items:center;padding:13px 14px;gap:10px;}
+.t-tag{background:var(--bg3);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap;min-width:64px;text-align:center;}
+.t-block.active-now .t-tag{background:rgba(124,106,255,0.12);color:var(--accent);}
+.t-info{flex:1;}
+.t-title{font-size:13px;font-weight:600;margin-bottom:1px;}
+.t-sub{font-size:11px;color:var(--muted);}
+
+/* MORNING PROGRESS CIRCLE BUTTON */
+.mr-prog-btn{position:relative;width:34px;height:34px;flex-shrink:0;cursor:pointer;}
+.mr-prog-btn svg{transform:rotate(-90deg);}
+.mr-bg{fill:none;stroke:var(--bg3);stroke-width:3;}
+.mr-arc{fill:none;stroke:var(--green);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 0.4s cubic-bezier(0.4,0,0.2,1);}
+.mr-tick{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;opacity:0;transition:opacity 0.3s;}
+.mr-prog-btn.all-done .mr-tick{opacity:1;}
+
+/* SUB ITEMS */
+.sub-items{border-top:1px solid var(--border);padding:4px 14px 10px;display:none;}
+.sub-items.open{display:block;}
+.sub-item{display:flex;align-items:center;gap:10px;padding:9px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);}
+.sub-item:last-child{border-bottom:none;}
+.sub-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.25s ease;}
+.sub-dot.checked{background:var(--green);border-color:var(--green);transform:scale(1.1);}
+.sub-dot svg{display:none;}
+.sub-dot.checked svg{display:block;}
+.sub-text{font-size:12px;color:var(--muted);flex:1;transition:all 0.25s;}
+.sub-item.done .sub-text{color:rgba(240,240,245,0.2);text-decoration:line-through;}
+.mr-count{font-size:10px;font-weight:600;color:var(--muted);background:var(--bg3);padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+
+/* SIMPLE CHECK */
+.s-check-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.25s;flex-shrink:0;}
+.s-check-btn.checked{background:var(--green);border-color:var(--green);}
+.s-check-btn svg{display:none;}
+.s-check-btn.checked svg{display:block;}
+
+/* CYBER CARDS */
+.cyber-day-card{margin:0 16px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;}
+.cyber-topic{font-size:15px;font-weight:700;margin-bottom:4px;}
+.cyber-goal{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.cyber-qs{background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:10px;}
+.cyber-qs-title{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.cyber-q{font-size:11px;color:var(--muted);padding:3px 0;line-height:1.5;}
+.cyber-q::before{content:"→ ";color:var(--accent);}
+.insight-area{background:var(--bg3);border-radius:10px;padding:10px 12px;}
+.insight-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.insight-input{background:transparent;border:none;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;width:100%;resize:none;outline:none;min-height:50px;line-height:1.6;}
+.insight-input::placeholder{color:rgba(240,240,245,0.2);}
+
+/* TOPIC PROGRESS */
+.topic-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin:0 16px 10px;}
+.topic-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.topic-title{font-size:15px;font-weight:600;}
+.topic-prog{font-size:12px;color:var(--muted);}
+.topic-bar-bg{background:var(--bg3);border-radius:4px;height:6px;overflow:hidden;}
+.topic-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.5s ease;}
+.lesson-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border);cursor:pointer;}
+.lesson-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.lesson-dot.done{background:var(--green);}
+.lesson-dot.active-l{background:var(--accent);box-shadow:0 0 6px rgba(124,106,255,0.6);}
+.lesson-text{flex:1;font-size:13px;}
+.lesson-text.done-l{color:var(--muted);text-decoration:line-through;}
+
+/* STATS */
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:10px;}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;}
+.stat-val{font-size:26px;font-weight:700;color:var(--accent);}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:3px;}
+.week-chart{display:flex;align-items:flex-end;gap:5px;height:70px;}
+.bar-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+.bar-b{width:100%;background:rgba(124,106,255,0.3);border-radius:3px 3px 0 0;min-height:3px;transition:height 0.5s ease;}
+.bar-b.today-b{background:var(--accent);}
+.bar-d{font-size:9px;color:var(--muted);}
+
+/* BOOKS */
+.book-card{margin:0 16px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;}
+.book-select-row{display:flex;gap:8px;padding:0 16px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;}
+.book-tab{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.book-tab.active{background:rgba(124,106,255,0.15);border-color:var(--accent);color:var(--accent);}
+.book-title-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.book-emoji{font-size:24px;}
+.book-name{font-size:15px;font-weight:700;}
+.book-author{font-size:11px;color:var(--muted);margin-top:1px;}
+.book-why-box{background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:10px;}
+.book-why-label{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;}
+.book-why-text{font-size:11px;color:var(--muted);line-height:1.6;}
+.book-how-box{background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
+.book-how-label{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
+.book-how-text{font-size:11px;color:var(--muted);line-height:1.6;}
+.chapters-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.chapters-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px;}
+.ch-btn{aspect-ratio:1;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+.ch-btn.ch-done{background:rgba(34,197,94,0.15);border-color:var(--green);color:var(--green);}
+.ch-btn.ch-current{background:rgba(124,106,255,0.15);border-color:var(--accent);color:var(--accent);}
+.book-prog-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.book-prog-bar{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.book-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--green));transition:width 0.5s ease;}
+.book-pct{font-size:11px;font-weight:600;color:var(--accent);width:32px;text-align:right;}
+.book-complete-anim{text-align:center;padding:16px;display:none;}
+.book-complete-anim.show{display:block;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* NOTIFICATION TOAST */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--bg2);border:1px solid var(--accent);border-radius:14px;padding:12px 18px;font-size:13px;font-weight:500;z-index:999;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);max-width:340px;width:90%;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast-icon{font-size:18px;flex-shrink:0;}
+
+/* NOTE */
+.note{margin:0 16px 8px;background:rgba(234,179,8,0.07);border:1px solid rgba(234,179,8,0.18);border-radius:12px;padding:10px 14px;font-size:12px;color:var(--gold);line-height:1.5;}
+
+/* BADGE */
+.badge{display:inline-block;background:rgba(124,106,255,0.12);color:var(--accent);font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+.badge.orange{background:rgba(249,115,22,0.12);color:var(--orange);}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+.page-hdr{padding:56px 20px 16px;}
+.page-hdr h1{font-size:24px;font-weight:700;margin-bottom:3px;}
+.page-hdr p{font-size:12px;color:var(--muted);}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:200;align-items:flex-end;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:20px 20px 40px;width:100%;animation:up 0.3s ease;}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:32px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:4px;}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.mode-opt{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s;}
+.mode-opt.sel,.mode-opt:active{border-color:var(--accent);background:rgba(124,106,255,0.08);}
+.mode-em{font-size:18px;}
+.mode-inf h4{font-size:13px;font-weight:600;margin-bottom:1px;}
+.mode-inf p{font-size:11px;color:var(--muted);}
+.modal-btn{background:var(--accent);border:none;border-radius:12px;color:white;font-size:14px;font-weight:600;padding:14px;width:100%;margin-top:8px;cursor:pointer;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,15,0.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:10px 0 26px;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--muted);font-size:9px;font-weight:500;transition:color 0.2s;}
+.nav-item.active{color:var(--accent);}
+.nav-ic{font-size:20px;}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-icon" id="toastIcon">⏰</div><div id="toastMsg">Time check!</div></div>
+
+<!-- TODAY PAGE -->
+<div id="pg-today" class="page active">
+  <div class="header">
+    <div class="header-top">
+      <div class="date-display">
+        <h1 id="dayName">Monday</h1>
+        <p id="fullDate">June 18, 2026</p>
+      </div>
+      <button class="mode-btn" onclick="openModal('modeModal')">
+        <span id="modeEmoji">💼</span><span id="modeName">Weekday</span>
+      </button>
+    </div>
+    <div class="progress-card">
+      <div class="ring-wrap">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#7c6aff"/><stop offset="100%" style="stop-color:#a855f7"/></linearGradient></defs>
+          <circle class="ring-bg" cx="32" cy="32" r="27"/>
+          <circle class="ring-fill" id="ringArc" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+        </svg>
+        <div class="ring-pct" id="ringPct">0%</div>
+      </div>
+      <div class="prog-info">
+        <h3 id="progTitle">Own your morning first</h3>
+        <p id="progSub">Start with your routine. Everything else follows.</p>
+      </div>
+    </div>
+    <div class="streak" id="streakBar"></div>
+  </div>
+
+  <div id="sundayNote" style="display:none"><div class="note">☀️ Sunday — Church, rest, reflect, plan the week. Morning still applies.</div></div>
+  <div id="sickNote" style="display:none"><div class="note">🤒 Rest up. Only morning routine counts today.</div></div>
+  <div id="socialNote" style="display:none"><div class="note">🎉 You have plans. Do your morning then enjoy your day.</div></div>
+
+  <!-- WAKE UP -->
+  <div class="sec-label">🌅 Start Here</div>
+  <div class="t-block" id="blk-wake">
+    <div class="t-block-hdr">
+      <div class="t-tag">6:00 AM</div>
+      <div class="t-info">
+        <div class="t-title">Wake Up</div>
+        <div class="t-sub">No snooze. Feet on the floor. Day starts now.</div>
+      </div>
+      <button class="s-check-btn" id="ck-wake" onclick="toggleSimple('wake')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- MORNING ROUTINE -->
+  <div class="t-block" id="blk-morning">
+    <div class="t-block-hdr" onclick="toggleExpand('morning-subs')">
+      <div class="t-tag">6:05 AM</div>
+      <div class="t-info">
+        <div class="t-title">Morning Routine <span class="mr-count" id="mrCount">0/10</span></div>
+        <div class="t-sub">Tap to expand · All 10 must be done</div>
+      </div>
+      <div class="mr-prog-btn" id="pb-morning">
+        <svg width="34" height="34" viewBox="0 0 34 34">
+          <circle class="mr-bg" cx="17" cy="17" r="13"/>
+          <circle class="mr-arc" id="pa-morning" cx="17" cy="17" r="13" stroke-dasharray="81.7" stroke-dashoffset="81.7"/>
+        </svg>
+        <div class="mr-tick">✓</div>
+      </div>
+    </div>
+    <div class="sub-items open" id="morning-subs">
+      <div class="sub-item" id="si-pray" onclick="checkMR('pray')">
+        <div class="sub-dot" id="sd-pray"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🙏 Pray</div>
+      </div>
+      <div class="sub-item" id="si-water" onclick="checkMR('water')">
+        <div class="sub-dot" id="sd-water"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">💧 Drink water</div>
+      </div>
+      <div class="sub-item" id="si-pushups" onclick="checkMR('pushups')">
+        <div class="sub-dot" id="sd-pushups"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">💪 Pushups</div>
+      </div>
+      <div class="sub-item" id="si-squats" onclick="checkMR('squats')">
+        <div class="sub-dot" id="sd-squats"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🏋️ Squats</div>
+      </div>
+      <div class="sub-item" id="si-brush" onclick="checkMR('brush')">
+        <div class="sub-dot" id="sd-brush"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🪥 Brush teeth</div>
+      </div>
+      <div class="sub-item" id="si-bed" onclick="checkMR('bed')">
+        <div class="sub-dot" id="sd-bed"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🛏️ Make bed</div>
+      </div>
+      <div class="sub-item" id="si-sweep" onclick="checkMR('sweep')">
+        <div class="sub-dot" id="sd-sweep"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🧹 Sweep the house</div>
+      </div>
+      <div class="sub-item" id="si-dishes" onclick="checkMR('dishes')">
+        <div class="sub-dot" id="sd-dishes"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🍽️ Wash dishes</div>
+      </div>
+      <div class="sub-item" id="si-bath" onclick="checkMR('bath')">
+        <div class="sub-dot" id="sd-bath"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🚿 Bath & dress</div>
+      </div>
+      <div class="sub-item" id="si-cook" onclick="checkMR('cook')">
+        <div class="sub-dot" id="sd-cook"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="sub-text">🍳 Cook & eat breakfast</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CYBER -->
+  <div class="sec-label">🛡️ Cybersecurity</div>
+  <div class="t-block" id="blk-cyber">
+    <div class="t-block-hdr">
+      <div class="t-tag">8:00 AM</div>
+      <div class="t-info">
+        <div class="t-title">Cybersecurity Study <span class="badge">2.5 hrs</span></div>
+        <div class="t-sub">8:00 AM → 10:30 AM</div>
+      </div>
+      <button class="s-check-btn" id="ck-cyber" onclick="toggleSimple('cyber')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- GAS SHOP -->
+  <div class="t-block" id="blk-gas">
+    <div class="t-block-hdr">
+      <div class="t-tag">10:30 AM</div>
+      <div class="t-info">
+        <div class="t-title">Gas Shop ⛽</div>
+        <div class="t-sub">Check stock, count sales, record money</div>
+      </div>
+      <button class="s-check-btn" id="ck-gas" onclick="toggleSimple('gas')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- DEEP WORK -->
+  <div class="sec-label">💻 Deep Work</div>
+  <div class="t-block" id="blk-work">
+    <div class="t-block-hdr">
+      <div class="t-tag">11:00 AM</div>
+      <div class="t-info">
+        <div class="t-title">Client Work & Leads</div>
+        <div class="t-sub">11:00 AM → 1:00 PM · Build, pitch, close</div>
+      </div>
+      <button class="s-check-btn" id="ck-work" onclick="toggleSimple('work')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- LUNCH -->
+  <div class="sec-label">🍽️ Break</div>
+  <div class="t-block" id="blk-lunch">
+    <div class="t-block-hdr">
+      <div class="t-tag">1:00 PM</div>
+      <div class="t-info">
+        <div class="t-title">Lunch & Rest</div>
+        <div class="t-sub">1:00 PM → 2:00 PM · Eat, recharge</div>
+      </div>
+      <button class="s-check-btn" id="ck-lunch" onclick="toggleSimple('lunch')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- AFTERNOON -->
+  <div class="sec-label">⚡ Afternoon</div>
+  <div class="t-block" id="blk-work2">
+    <div class="t-block-hdr">
+      <div class="t-tag">2:00 PM</div>
+      <div class="t-info">
+        <div class="t-title">Work Block 2</div>
+        <div class="t-sub">2:00 PM → 5:00 PM · Follow up, keep building</div>
+      </div>
+      <button class="s-check-btn" id="ck-work2" onclick="toggleSimple('work2')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- EVENING -->
+  <div class="sec-label">🌙 Evening</div>
+  <div class="t-block" id="blk-read">
+    <div class="t-block-hdr">
+      <div class="t-tag">7:00 PM</div>
+      <div class="t-info">
+        <div class="t-title">Read 20 Minutes</div>
+        <div class="t-sub">Log it in the Books tab when done</div>
+      </div>
+      <button class="s-check-btn" id="ck-read" onclick="toggleSimple('read')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="t-block" id="blk-review">
+    <div class="t-block-hdr">
+      <div class="t-tag">8:30 PM</div>
+      <div class="t-info">
+        <div class="t-title">Daily Review</div>
+        <div class="t-sub">What happened today? What's the priority tomorrow?</div>
+      </div>
+      <button class="s-check-btn" id="ck-review" onclick="toggleSimple('review')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="t-block" id="blk-sleep">
+    <div class="t-block-hdr">
+      <div class="t-tag">11:00 PM</div>
+      <div class="t-info">
+        <div class="t-title">Lights Out 🌙</div>
+        <div class="t-sub">Phone down. Sleep is the weapon.</div>
+      </div>
+      <button class="s-check-btn" id="ck-sleep" onclick="toggleSimple('sleep')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CYBER PAGE -->
+<div id="pg-cyber" class="page">
+  <div class="page-hdr">
+    <h1>Cybersecurity 🛡️</h1>
+    <p>Track your learning path. 2.5 hours daily. No skipping.</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-val" id="cyberDays">0</div><div class="stat-lbl">Days studied</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)" id="cyberPct">0%</div><div class="stat-lbl">Foundation done</div></div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-hdr"><div class="topic-title">🐧 Linux Fundamentals</div><div class="topic-prog" id="prog-linux">0/8</div></div>
+    <div class="topic-bar-bg"><div class="topic-bar-fill" id="bar-linux" style="width:0%"></div></div>
+    <div class="lesson-item" onclick="toggleLesson('l1')"><div class="lesson-dot done" id="ld-l1"></div><div class="lesson-text done" id="lt-l1">File system & navigation</div></div>
+    <div class="lesson-item" onclick="toggleLesson('l2')"><div class="lesson-dot done" id="ld-l2"></div><div class="lesson-text done" id="lt-l2">Permissions & users</div></div>
+    <div class="lesson-item" onclick="toggleLesson('l3')"><div class="lesson-dot active-l" id="ld-l3"></div><div class="lesson-text" id="lt-l3">Bash scripting basics</div></div>
+    <div class="lesson-item" onclick="toggleLesson('l4')"><div class="lesson-dot" id="ld-l4"></div><div class="lesson-text" id="lt-l4">Process management</div></div>
+    <div class="lesson-item" onclick="toggleLesson('l5')"><div class="lesson-dot" id="ld-l5"></div><div class="lesson-text" id="lt-l5">Networking in Linux</div></div>
+    <div class="lesson-item" onclick="toggleLesson('l6')"><div class="lesson-dot" id="ld-l6"></div><div class="lesson-text" id="lt-l6">Package management</div></div>
+    <div class="lesson-item" onclick="toggleLesson('l7')"><div class="lesson-dot" id="ld-l7"></div><div class="lesson-text" id="lt-l7">Log analysis</div></div>
+    <div class="lesson-item" onclick="toggleLesson('l8')"><div class="lesson-dot" id="ld-l8"></div><div class="lesson-text" id="lt-l8">Hardening & security</div></div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-hdr"><div class="topic-title">🌐 Networking</div><div class="topic-prog" id="prog-net">0/6</div></div>
+    <div class="topic-bar-bg"><div class="topic-bar-fill" id="bar-net" style="width:0%"></div></div>
+    <div class="lesson-item" onclick="toggleLesson('n1')"><div class="lesson-dot done" id="ld-n1"></div><div class="lesson-text done" id="lt-n1">TCP/IP & OSI model</div></div>
+    <div class="lesson-item" onclick="toggleLesson('n2')"><div class="lesson-dot done" id="ld-n2"></div><div class="lesson-text done" id="lt-n2">DNS, DHCP, HTTP/S</div></div>
+    <div class="lesson-item" onclick="toggleLesson('n3')"><div class="lesson-dot active-l" id="ld-n3"></div><div class="lesson-text" id="lt-n3">Subnetting & CIDR</div></div>
+    <div class="lesson-item" onclick="toggleLesson('n4')"><div class="lesson-dot" id="ld-n4"></div><div class="lesson-text" id="lt-n4">Wireshark & packet analysis</div></div>
+    <div class="lesson-item" onclick="toggleLesson('n5')"><div class="lesson-dot" id="ld-n5"></div><div class="lesson-text" id="lt-n5">Firewalls & VPNs</div></div>
+    <div class="lesson-item" onclick="toggleLesson('n6')"><div class="lesson-dot" id="ld-n6"></div><div class="lesson-text" id="lt-n6">Network attacks & defence</div></div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-hdr"><div class="topic-title">🔍 Reconnaissance</div><div class="topic-prog" id="prog-recon">0/6</div></div>
+    <div class="topic-bar-bg"><div class="topic-bar-fill" id="bar-recon" style="width:0%"></div></div>
+    <div class="lesson-item" onclick="toggleLesson('r1')"><div class="lesson-dot" id="ld-r1"></div><div class="lesson-text" id="lt-r1">OSINT fundamentals</div></div>
+    <div class="lesson-item" onclick="toggleLesson('r2')"><div class="lesson-dot" id="ld-r2"></div><div class="lesson-text" id="lt-r2">Nmap & port scanning</div></div>
+    <div class="lesson-item" onclick="toggleLesson('r3')"><div class="lesson-dot" id="ld-r3"></div><div class="lesson-text" id="lt-r3">Google dorking</div></div>
+    <div class="lesson-item" onclick="toggleLesson('r4')"><div class="lesson-dot" id="ld-r4"></div><div class="lesson-text" id="lt-r4">Shodan & Censys</div></div>
+    <div class="lesson-item" onclick="toggleLesson('r5')"><div class="lesson-dot" id="ld-r5"></div><div class="lesson-text" id="lt-r5">Subdomain enumeration</div></div>
+    <div class="lesson-item" onclick="toggleLesson('r6')"><div class="lesson-dot" id="ld-r6"></div><div class="lesson-text" id="lt-r6">Active vs passive recon</div></div>
+  </div>
+
+  <div class="topic-card">
+    <div class="topic-hdr"><div class="topic-title">⚡ Tools & Exploitation</div><div class="topic-prog" id="prog-tools">0/6</div></div>
+    <div class="topic-bar-bg"><div class="topic-bar-fill" id="bar-tools" style="width:0%"></div></div>
+    <div class="lesson-item" onclick="toggleLesson('t1')"><div class="lesson-dot" id="ld-t1"></div><div class="lesson-text" id="lt-t1">Metasploit framework</div></div>
+    <div class="lesson-item" onclick="toggleLesson('t2')"><div class="lesson-dot" id="ld-t2"></div><div class="lesson-text" id="lt-t2">Burp Suite basics</div></div>
+    <div class="lesson-item" onclick="toggleLesson('t3')"><div class="lesson-dot" id="ld-t3"></div><div class="lesson-text" id="lt-t3">SQLi & XSS attacks</div></div>
+    <div class="lesson-item" onclick="toggleLesson('t4')"><div class="lesson-dot" id="ld-t4"></div><div class="lesson-text" id="lt-t4">Password cracking</div></div>
+    <div class="lesson-item" onclick="toggleLesson('t5')"><div class="lesson-dot" id="ld-t5"></div><div class="lesson-text" id="lt-t5">Privilege escalation</div></div>
+    <div class="lesson-item" onclick="toggleLesson('t6')"><div class="lesson-dot" id="ld-t6"></div><div class="lesson-text" id="lt-t6">CTF practice (TryHackMe)</div></div>
+  </div>
+
+  <div style="height:10px"></div>
+</div>
+
+<!-- BOOKS PAGE -->
+<div id="pg-books" class="page">
+  <div class="page-hdr">
+    <h1>Books 📚</h1>
+    <p>20 minutes at 7PM daily. One chapter. Every day.</p>
+  </div>
+
+  <div class="book-select-row">
+    <div class="book-tab active" id="bt-atomic" onclick="selectBook('atomic')">⚛️ Atomic Habits</div>
+    <div class="book-tab" id="bt-deep" onclick="selectBook('deep')">🔇 Deep Work</div>
+    <div class="book-tab" id="bt-offers" onclick="selectBook('offers')">💰 $100M Offers</div>
+    <div class="book-tab" id="bt-hack" onclick="selectBook('hack')">⚔️ Hacking</div>
+  </div>
+
+  <div id="book-panel" class="book-card">
+    <div class="book-title-row">
+      <div class="book-emoji" id="bk-emoji">⚛️</div>
+      <div>
+        <div class="book-name" id="bk-name">Atomic Habits</div>
+        <div class="book-author" id="bk-author">James Clear · 18 chapters</div>
+      </div>
+    </div>
+    <div class="book-why-box">
+      <div class="book-why-label">Why read this</div>
+      <div class="book-why-text" id="bk-why">You have ADHD and big goals. This book is a system for building habits that stick without willpower. Every chapter shows why consistency beats motivation — exactly what you need right now.</div>
+    </div>
+    <div class="book-how-box">
+      <div class="book-how-label">When & How</div>
+      <div class="book-how-text" id="bk-how">Read at 7:00 PM daily. 1 chapter per session (~20 mins). Goal: extract 1 habit you can apply immediately from each chapter. Start with this book before the others.</div>
+    </div>
+    <div class="book-prog-row">
+      <div class="book-prog-bar"><div class="book-prog-fill" id="bk-fill" style="width:0%"></div></div>
+      <div class="book-pct" id="bk-pct">0%</div>
+    </div>
+    <div class="chapters-label" id="ch-label">Tap a chapter to mark it done</div>
+    <div class="chapters-grid" id="chaptersGrid"></div>
+    <div class="book-complete-anim" id="bookComplete">
+      <div style="font-size:48px;margin-bottom:8px">🏆</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px">Book Complete!</div>
+      <div style="font-size:12px;color:var(--muted)">You finished this one. On to the next.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS PAGE -->
+<div id="pg-stats" class="page">
+  <div class="page-hdr">
+    <h1>Stats 📊</h1>
+    <p>Consistency is the only cheat code.</p>
+  </div>
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-val" id="st-streak">0</div><div class="stat-lbl">Day streak 🔥</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--green)" id="st-today">0</div><div class="stat-lbl">Done today</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--gold)" id="st-cyber">0</div><div class="stat-lbl">Cyber sessions</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--orange)" id="st-best">7</div><div class="stat-lbl">Best streak</div></div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin:0 16px 10px;">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px;">This Week</div>
+    <div class="week-chart" id="weekChart"></div>
+  </div>
+</div>
+
+<!-- MODE MODAL -->
+<div class="modal-ov" id="modeModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>What kind of day?</h2>
+    <p>Morning routine never changes. The rest flexes.</p>
+    <div class="mode-opt sel" id="mo-weekday" onclick="setMode('weekday')"><div class="mode-em">💼</div><div class="mode-inf"><h4>Weekday</h4><p>Full schedule. Cyber. Deep work. Build.</p></div></div>
+    <div class="mode-opt" id="mo-sunday" onclick="setMode('sunday')"><div class="mode-em">☀️</div><div class="mode-inf"><h4>Sunday</h4><p>Church, rest, plan the week.</p></div></div>
+    <div class="mode-opt" id="mo-sick" onclick="setMode('sick')"><div class="mode-em">🤒</div><div class="mode-inf"><h4>Sick Day</h4><p>Rest. Morning routine only.</p></div></div>
+    <div class="mode-opt" id="mo-social" onclick="setMode('social')"><div class="mode-em">🎉</div><div class="mode-inf"><h4>Social Day</h4><p>You have plans. Morning then enjoy.</p></div></div>
+    <button class="modal-btn" onclick="closeModal('modeModal')">Done</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-today" onclick="showPage('today')"><div class="nav-ic">📋</div><span>Today</span></div>
+  <div class="nav-item" id="nav-cyber" onclick="showPage('cyber')"><div class="nav-ic">🛡️</div><span>Cyber</span></div>
+  <div class="nav-item" id="nav-books" onclick="showPage('books')"><div class="nav-ic">📚</div><span>Books</span></div>
+  <div class="nav-item" id="nav-stats" onclick="showPage('stats')"><div class="nav-ic">📊</div><span>Stats</span></div>
+</div>
+
+<script>
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MR_KEYS=['pray','water','pushups','squats','brush','bed','sweep','dishes','bath','cook'];
+const SIMPLE_KEYS=['wake','cyber','gas','work','lunch','work2','read','review','sleep'];
+const today=new Date();
+const todayKey=today.toDateString();
+
+let S=JSON.parse(localStorage.getItem('oyd2')||'{}');
+if(!S[todayKey])S[todayKey]={mr:{},simple:{},mode:'weekday'};
+const TS=S[todayKey];
+
+let LS=JSON.parse(localStorage.getItem('oyd2_lessons')||'{"l1":true,"l2":true,"n1":true,"n2":true}');
+let BS=JSON.parse(localStorage.getItem('oyd2_books')||'{"atomic":[],"deep":[],"offers":[],"hack":[]}');
+let currentBook='atomic';
+
+const BOOKS={
+  atomic:{emoji:'⚛️',name:'Atomic Habits',author:'James Clear · 18 chapters',total:18,
+    why:'You have ADHD and big goals. This book is a system for building habits that stick without willpower. Every chapter shows why consistency beats motivation — exactly what you need right now.',
+    how:'Read at 7:00 PM daily. 1 chapter per session (~20 mins). Goal: extract 1 habit you can apply from each chapter. Read this one first.'},
+  deep:{emoji:'🔇',name:'Deep Work',author:'Cal Newport · 16 chapters',total:16,
+    why:'Distraction is your biggest enemy with ADHD. This book teaches focused work for 2-3 hours without your brain jumping. Read it after Atomic Habits.',
+    how:'7:00 PM daily, 20 mins. 1 chapter per session. Goal: build a deep work ritual for your cyber study and client work blocks.'},
+  offers:{emoji:'💰',name:'$100M Offers',author:'Alex Hormozi · 12 chapters',total:12,
+    why:'You are selling websites. This teaches you to package your offer so clients feel they are getting a deal even at higher prices. Read before any client pitch.',
+    how:'Same 7PM slot. Alternate days with Deep Work if needed. Focus on pricing and value stacking chapters.'},
+  hack:{emoji:'⚔️',name:'Hacking: Art of Exploitation',author:'Jon Erickson · 8 chapters',total:8,
+    why:'The cybersecurity bible. Not just tools — it teaches how attacks work at a deep level. Separates tool users from people who truly understand hacking.',
+    how:'Read 1 chapter before your 8AM cyber block. Pairs directly with your daily practice. Goal: understand the theory behind what you do each day.'}
+};
+
+// DATE
+document.getElementById('dayName').textContent=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][today.getDay()];
+document.getElementById('fullDate').textContent=`${MONTHS[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+if(today.getDay()===0&&!TS.modeSet)TS.mode='sunday';
+
+// STREAK BAR
+function buildStreak(){
+  const bar=document.getElementById('streakBar');bar.innerHTML='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=d.toDateString();const st=S[k];
+    const done=st&&(Object.keys(st.mr||{}).filter(x=>st.mr[x]).length+Object.keys(st.simple||{}).filter(x=>st.simple[x]).length)>=7;
+    const div=document.createElement('div');
+    div.className='s-day'+(i===0?' today':'')+(done?' done':'');
+    div.innerHTML=`<div class="sl">${DAYS[d.getDay()]}</div><div class="sd"></div>`;
+    bar.appendChild(div);
+  }
+}
+
+// PROGRESS RING
+function updateProgress(){
+  const mrDone=MR_KEYS.filter(k=>(TS.mr||{})[k]).length;
+  const simpleDone=SIMPLE_KEYS.filter(k=>(TS.simple||{})[k]).length;
+  const total=MR_KEYS.length+SIMPLE_KEYS.length;
+  const done=mrDone+simpleDone;
+  const pct=Math.round((done/total)*100);
+  document.getElementById('ringArc').style.strokeDashoffset=169.6-(pct/100)*169.6;
+  document.getElementById('ringPct').textContent=pct+'%';
+  const msgs=[
+    ['Own your morning first','Start with your routine. Everything else follows.'],
+    ['Morning done. Keep moving.','Cyber study is next. Lock in.'],
+    ['Halfway through your day.','You\'re in control. Stay consistent.'],
+    ['Almost complete.','Last few tasks. Finish what you started.'],
+    ['Day owned. 🔥','Every task done. Rest well tonight.']
+  ];
+  const idx=Math.min(Math.floor(pct/25),4);
+  document.getElementById('progTitle').textContent=msgs[idx][0];
+  document.getElementById('progSub').textContent=msgs[idx][1];
+  document.getElementById('st-today').textContent=done;
+  document.getElementById('st-streak').textContent=calcStreak();
+  document.getElementById('st-cyber').textContent=Object.keys(S).filter(k=>S[k]?.simple?.cyber).length;
+  save();
+}
+
+function calcStreak(){
+  let s=0;
+  for(let i=0;i<60;i++){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=d.toDateString();const st=S[k];
+    const done=st&&(Object.keys(st.mr||{}).filter(x=>st.mr[x]).length+Object.keys(st.simple||{}).filter(x=>st.simple[x]).length)>=7;
+    if(done)s++;else if(i>0)break;
+  }
+  return s;
+}
+
+// MORNING ROUTINE
+function checkMR(id){
+  if(!TS.mr)TS.mr={};
+  TS.mr[id]=!TS.mr[id];
+  const dot=document.getElementById('sd-'+id);
+  const item=document.getElementById('si-'+id);
+  if(TS.mr[id]){dot.classList.add('checked');item.classList.add('done');}
+  else{dot.classList.remove('checked');item.classList.remove('done');}
+  updateMRProgress();
+  updateProgress();
+}
+
+function updateMRProgress(){
+  const done=MR_KEYS.filter(k=>(TS.mr||{})[k]).length;
+  document.getElementById('mrCount').textContent=done+'/10';
+  const circ=81.7;
+  document.getElementById('pa-morning').style.strokeDashoffset=circ-(done/10)*circ;
+  const pb=document.getElementById('pb-morning');
+  const blk=document.getElementById('blk-morning');
+  if(done===10){pb.classList.add('all-done');blk.classList.add('done');}
+  else{pb.classList.remove('all-done');blk.classList.remove('done');}
+}
+
+// SIMPLE CHECKS
+function toggleSimple(id){
+  if(!TS.simple)TS.simple={};
+  TS.simple[id]=!TS.simple[id];
+  const btn=document.getElementById('ck-'+id);
+  const blk=document.getElementById('blk-'+id);
+  if(btn){btn.classList.toggle('checked',!!TS.simple[id]);}
+  if(blk){blk.classList.toggle('done',!!TS.simple[id]);}
+  updateProgress();
+}
+
+// EXPAND
+function toggleExpand(id){document.getElementById(id).classList.toggle('open');}
+
+// RESTORE
+function restore(){
+  MR_KEYS.forEach(k=>{
+    if((TS.mr||{})[k]){
+      document.getElementById('sd-'+k)?.classList.add('checked');
+      document.getElementById('si-'+k)?.classList.add('done');
+    }
+  });
+  SIMPLE_KEYS.forEach(id=>{
+    if((TS.simple||{})[id]){
+      document.getElementById('ck-'+id)?.classList.add('checked');
+      document.getElementById('blk-'+id)?.classList.add('done');
+    }
+  });
+  updateMRProgress();
+  applyMode(TS.mode||'weekday');
+  document.querySelectorAll('.mode-opt').forEach(o=>o.classList.remove('sel'));
+  document.getElementById('mo-'+(TS.mode||'weekday'))?.classList.add('sel');
+}
+
+// MODE
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function setMode(mode){
+  document.querySelectorAll('.mode-opt').forEach(o=>o.classList.remove('sel'));
+  document.getElementById('mo-'+mode)?.classList.add('sel');
+  TS.mode=mode;TS.modeSet=true;
+  applyMode(mode);save();
+}
+
+function applyMode(mode){
+  const em={weekday:'💼',sunday:'☀️',sick:'🤒',social:'🎉'};
+  const nm={weekday:'Weekday',sunday:'Sunday',sick:'Sick Day',social:'Social Day'};
+  document.getElementById('modeEmoji').textContent=em[mode]||'💼';
+  document.getElementById('modeName').textContent=nm[mode]||'Weekday';
+  ['sundayNote','sickNote','socialNote'].forEach(id=>document.getElementById(id).style.display='none');
+  if(mode==='sunday')document.getElementById('sundayNote').style.display='block';
+  if(mode==='sick')document.getElementById('sickNote').style.display='block';
+  if(mode==='social')document.getElementById('socialNote').style.display='block';
+  ['blk-cyber','blk-work','blk-work2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.style.opacity=(mode==='sick')?'0.35':'1';
+  });
+}
+
+// ACTIVE BLOCK
+function highlightActive(){
+  const now=new Date();const t=now.getHours()*60+now.getMinutes();
+  const blocks=[
+    {id:'wake',s:6*60,e:6*60+5},{id:'morning',s:6*60+5,e:8*60},
+    {id:'cyber',s:8*60,e:10*60+30},{id:'gas',s:10*60+30,e:11*60},
+    {id:'work',s:11*60,e:13*60},{id:'lunch',s:13*60,e:14*60},
+    {id:'work2',s:14*60,e:17*60},{id:'read',s:19*60,e:19*60+30},
+    {id:'review',s:20*60+30,e:21*60+30},{id:'sleep',s:23*60,e:24*60}
+  ];
+  blocks.forEach(b=>{
+    const el=document.getElementById('blk-'+b.id);
+    if(el)el.classList.toggle('active-now',t>=b.s&&t<b.e);
+  });
+}
+
+// NOTIFICATIONS (in-app toast)
+const NOTIFS=[
+  {h:6,m:0,msg:'⏰ 6:00 AM — Time to wake up!',icon:'🌅'},
+  {h:8,m:0,msg:'🛡️ 8:00 AM — Cyber study starts now.',icon:'🛡️'},
+  {h:10,m:25,msg:'⛽ Gas shop check in 5 mins.',icon:'⛽'},
+  {h:11,m:0,msg:'💻 Deep work block. Lock in.',icon:'💻'},
+  {h:13,m:0,msg:'🍽️ Lunch break. Rest well.',icon:'🍽️'},
+  {h:14,m:0,msg:'⚡ Back to work. Afternoon block.',icon:'⚡'},
+  {h:19,m:0,msg:'📚 Reading time. 20 minutes.',icon:'📚'},
+  {h:20,m:30,msg:'📋 Daily review time.',icon:'📋'},
+  {h:23,m:0,msg:'🌙 Lights out. Phone down.',icon:'🌙'}
+];
+
+let lastNotif='';
+function checkNotifs(){
+  const now=new Date();const h=now.getHours();const m=now.getMinutes();
+  NOTIFS.forEach(n=>{
+    const key=`${todayKey}-${n.h}-${n.m}`;
+    if(h===n.h&&m===n.m&&lastNotif!==key){
+      lastNotif=key;
+      showToast(n.icon,n.msg);
+    }
+  });
+}
+
+function showToast(icon,msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),4000);
+}
+
+// LESSONS (cyber)
+function toggleLesson(id){
+  LS[id]=!LS[id];
+  localStorage.setItem('oyd2_lessons',JSON.stringify(LS));
+  updateLessons();
+}
+
+function updateLessons(){
+  const groups={linux:['l1','l2','l3','l4','l5','l6','l7','l8'],net:['n1','n2','n3','n4','n5','n6'],recon:['r1','r2','r3','r4','r5','r6'],tools:['t1','t2','t3','t4','t5','t6']};
+  let td=0,ta=0;
+  Object.keys(groups).forEach(g=>{
+    const ls=groups[g];const done=ls.filter(l=>LS[l]).length;
+    td+=done;ta+=ls.length;
+    document.getElementById('prog-'+g).textContent=`${done}/${ls.length}`;
+    document.getElementById('bar-'+g).style.width=`${(done/ls.length)*100}%`;
+    ls.forEach((l,i)=>{
+      const dot=document.getElementById('ld-'+l);const txt=document.getElementById('lt-'+l);
+      if(!dot)return;
+      if(LS[l]){dot.className='lesson-dot done';txt.className='lesson-text done-l';}
+      else{const prev=i===0||LS[ls[i-1]];dot.className='lesson-dot'+(prev?' active-l':'');txt.className='lesson-text';}
+    });
+  });
+  document.getElementById('cyberPct').textContent=Math.round((td/ta)*100)+'%';
+  document.getElementById('cyberDays').textContent=Object.keys(S).filter(k=>S[k]?.simple?.cyber).length;
+}
+
+// BOOKS
+function selectBook(id){
+  currentBook=id;
+  document.querySelectorAll('.book-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('bt-'+id).classList.add('active');
+  renderBook();
+}
+
+function renderBook(){
+  const b=BOOKS[currentBook];const done=BS[currentBook]||[];
+  document.getElementById('bk-emoji').textContent=b.emoji;
+  document.getElementById('bk-name').textContent=b.name;
+  document.getElementById('bk-author').textContent=b.author;
+  document.getElementById('bk-why').textContent=b.why;
+  document.getElementById('bk-how').textContent=b.how;
+  const pct=Math.round((done.length/b.total)*100);
+  document.getElementById('bk-fill').style.width=pct+'%';
+  document.getElementById('bk-pct').textContent=pct+'%';
+
+  const grid=document.getElementById('chaptersGrid');grid.innerHTML='';
+  for(let i=1;i<=b.total;i++){
+    const isDone=done.includes(i);
+    const isCurrent=!isDone&&(i===1||(done.includes(i-1)));
+    const btn=document.createElement('div');
+    btn.className='ch-btn'+(isDone?' ch-done':isCurrent?' ch-current':'');
+    btn.textContent=i;
+    btn.onclick=()=>toggleChapter(i);
+    grid.appendChild(btn);
+  }
+
+  const complete=document.getElementById('bookComplete');
+  if(done.length===b.total){complete.classList.add('show');}
+  else{complete.classList.remove('show');}
+}
+
+function toggleChapter(ch){
+  if(!BS[currentBook])BS[currentBook]=[];
+  const idx=BS[currentBook].indexOf(ch);
+  if(idx>-1)BS[currentBook].splice(idx,1);
+  else BS[currentBook].push(ch);
+  localStorage.setItem('oyd2_books',JSON.stringify(BS));
+  renderBook();
+}
+
+// PAGES
+function showPage(page){
+  ['today','cyber','books','stats'].forEach(p=>{
+    document.getElementById('pg-'+p).classList.toggle('active',p===page);
+    document.getElementById('nav-'+p).classList.toggle('active',p===page);
+  });
+  if(page==='stats')buildWeekChart();
+}
+
+function buildWeekChart(){
+  const chart=document.getElementById('weekChart');chart.innerHTML='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=d.toDateString();const st=S[k];
+    const done=st?(Object.keys(st.mr||{}).filter(x=>st.mr[x]).length+Object.keys(st.simple||{}).filter(x=>st.simple[x]).length):0;
+    const pct=Math.min(Math.round((done/19)*100),100);
+    const w=document.createElement('div');w.className='bar-w';
+    w.innerHTML=`<div class="bar-b${i===0?' today-b':''}" style="height:${Math.max(pct,3)}%"></div><div class="bar-d">${DAYS[d.getDay()]}</div>`;
+    chart.appendChild(w);
+  }
+}
+
+function save(){localStorage.setItem('oyd2',JSON.stringify(S));}
+
+// INIT
+buildStreak();
+restore();
+updateProgress();
+updateLessons();
+renderBook();
+highlightActive();
+setInterval(highlightActive,60000);
+setInterval(checkNotifs,30000);
+</script>
+</body>
+</html>
